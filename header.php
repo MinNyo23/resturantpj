@@ -1,8 +1,9 @@
 <?php
 require_once __DIR__ . '/includes/app.php';
 $currentPage = basename($_SERVER['PHP_SELF'] ?? '');
-$isLoggedIn = !empty($_SESSION['user_id']);
-$isAdmin = !empty($_SESSION['admin']);
+$isLoggedIn = is_customer();
+$isAdmin = is_owner();
+$isGuest = is_guest();
 $successMessage = flash('success');
 $errorMessage = flash('error');
 ?>
@@ -35,9 +36,9 @@ $errorMessage = flash('error');
         <?php elseif ($isLoggedIn): ?>
           <li class="nav-item"><a class="nav-link cart-link <?php echo $currentPage === 'cart.php' ? 'active' : ''; ?>" href="cart.php"><i class="fas fa-shopping-bag mr-1"></i>Cart <span class="cart-badge"><?php echo cart_count(); ?></span></a></li>
           <li class="nav-item"><a class="btn btn-sm btn-outline-light ml-lg-2" href="logout.php">Sign out</a></li>
-        <?php else: ?>
-          <li class="nav-item"><a class="nav-link" href="login.php">Sign in</a></li>
-          <li class="nav-item"><a class="btn btn-sm btn-primary ml-lg-2" href="register.php">Create account</a></li>
+        <?php elseif ($isGuest): ?>
+          <li class="nav-item"><a class="nav-link" href="access.php">Guest / customer / owner</a></li>
+          <li class="nav-item"><a class="btn btn-sm btn-primary ml-lg-2" href="login.php">Sign in</a></li>
         <?php endif; ?>
       </ul>
     </div>

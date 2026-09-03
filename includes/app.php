@@ -37,9 +37,24 @@ function cart_count(): int
     return array_sum(array_map('intval', $_SESSION['cart'] ?? []));
 }
 
+function is_guest(): bool
+{
+    return empty($_SESSION['user_id']) && empty($_SESSION['admin_id']);
+}
+
+function is_customer(): bool
+{
+    return !empty($_SESSION['user_id']) && empty($_SESSION['admin_id']);
+}
+
+function is_owner(): bool
+{
+    return !empty($_SESSION['admin_id']);
+}
+
 function require_customer(): void
 {
-    if (empty($_SESSION['user_id'])) {
+    if (!is_customer()) {
         flash('error', 'Please sign in before adding items to your order.');
         redirect('login.php');
     }
