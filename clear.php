@@ -1,6 +1,8 @@
-<?php 
-session_start();
-$id=$_GET['id'];
+<?php
+require_once __DIR__ . '/includes/app.php';
+require_customer();
+
 unset($_SESSION['cart']);
-header("location:cart.php");
- ?>
+flash('success', 'Your cart has been cleared.');
+redirect('cart.php');
+?>

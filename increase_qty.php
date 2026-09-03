@@ -1,21 +1,17 @@
 <?php
-session_start();
-include('admin/conn.php');
-$id=$_GET['id'];
-$query="select qty from food where foodid='$id'";
-$go_query=mysqli_query($connection,$query);
-while($row=mysqli_fetch_assoc($go_query))
-{
-  $qty=$row['qty'];
-  $a=$_SESSION['cart'][$id];
-  if($a<$qty){
-    $_SESSION['cart'][$id]++;
-    header("location:cart.php");
-  }
-  else
-  {
-    echo "<script>window.alert('This product is limited today')</script>";
-    echo "<script>window.location.href='cart.php'</script>";
-  }
+require_once __DIR__ . '/includes/app.php';
+require_customer();
+
+$foodId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+$food = $foodId ? get_food($foodId) : null;
+$currentQuantity = $foodId ? (int) ($_SESSION['cart'][$foodId] ?? 0) : 0;
+
+if (!$food || $currentQuantity < 1) {
+    flash('error', 'That cart item is no longer available.');
+} elseif ($currentQuantity >= (int) $food['qty']) {
+    flash('error', 'You have reached the available quantity for ' . $food['foodname'] . '.');
+} else {
+    $_SESSION['cart'][$foodId] = $currentQuantity + 1;
 }
- ?>
+redirect('cart.php');
+?>

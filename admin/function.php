@@ -172,26 +172,28 @@ function adduser()
 
     else if ($password!="" && $uname !="")
     {
-    	$query = "select * from user where username = '$uname' and password = md5('$password') ";
-    	$ch_query = mysqli_query($connection,$query);
-    	$count = mysqli_num_rows($ch_query);
-    	if ($count>0)
-    	{
-    		echo "<script> window.alert('This user is already exist.')</script>  ";
-    	}	
-    	else
-    	{
-    		$hashvalue = md5 ($password);
-    		$query = "insert into user (username,password,role)";
-    		$query.= "values('$uname','$hashvalue','$usertype')";
-
-    		$go_query = mysqli_query($connection,$query);
-    		if(!$go_query)
-    		{
-    			die("query faile".mysqli_error($connection) );
-    		}
-    		header("location:userlist.php");
-    	}
+	$check = mysqli_prepare($connection, 'select userid from user where username = ? limit 1');
+	mysqli_stmt_bind_param($check, 's', $uname);
+	mysqli_stmt_execute($check);
+	$count = mysqli_num_rows(mysqli_stmt_get_result($check));
+	mysqli_stmt_close($check);
+	if ($count>0)
+	{
+		echo "<script> window.alert('This user is already exist.')</script>  ";
+	}
+	else
+	{
+		$hashvalue = password_hash($password, PASSWORD_DEFAULT);
+		$stmt = mysqli_prepare($connection, 'insert into user (username,password,role) values(?,?,?)');
+		mysqli_stmt_bind_param($stmt, 'sss', $uname, $hashvalue, $usertype);
+		$go_query = mysqli_stmt_execute($stmt);
+		mysqli_stmt_close($stmt);
+		if(!$go_query)
+		{
+			die("query failed".mysqli_error($connection) );
+		}
+		header("location:userlist.php");
+	}
     }
 }
 

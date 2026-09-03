@@ -1,0 +1,60 @@
+:root {
+  --ink: #17221c;
+  --muted: #66746a;
+  --paper: #f8f7f2;
+  --sage: #dfe9df;
+  --green: #286143;
+  --green-dark: #183b2a;
+  --gold: #d99c38;
+  --line: #e6e8e3;
+}
+
+html { scroll-behavior: smooth; }
+body.app-body {
+  min-height: 100vh;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.app-navbar { background: var(--green-dark); box-shadow: 0 8px 24px rgba(24, 59, 42, .14); }
+.app-navbar .navbar-brand { font-weight: 800; letter-spacing: -.03em; }
+.brand-mark { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; margin-right: 10px; color: var(--green-dark); background: var(--gold); border-radius: 10px; }
+.brand-accent { color: var(--gold); }
+.app-navbar .nav-link { color: rgba(255,255,255,.75); transition: color .18s ease, transform .18s ease; }
+.app-navbar .nav-link:hover, .app-navbar .nav-link.active { color: #fff; transform: translateY(-1px); }
+.cart-badge { display: inline-flex; min-width: 21px; height: 21px; align-items: center; justify-content: center; padding: 0 5px; color: var(--green-dark); background: var(--gold); border-radius: 999px; font-size: .72rem; font-weight: 800; }
+.app-main { padding: 48px 0 72px; }
+.menu-hero { overflow: hidden; position: relative; padding: 58px 0; color: #fff; background: linear-gradient(120deg, rgba(24,59,42,.97), rgba(40,97,67,.88)), url('../images/background.jpg') center/cover; border-radius: 24px; box-shadow: 0 20px 50px rgba(24,59,42,.18); }
+.menu-hero:after { content: ""; position: absolute; width: 240px; height: 240px; right: -80px; top: -90px; border: 35px solid rgba(217,156,56,.26); border-radius: 50%; }
+.menu-hero__content { position: relative; z-index: 1; max-width: 650px; padding: 0 40px; }
+.eyebrow { color: var(--gold); font-size: .78rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+.menu-hero h1 { max-width: 610px; font-size: clamp(2.3rem, 6vw, 4.8rem); line-height: .98; letter-spacing: -.055em; }
+.menu-hero p { max-width: 560px; color: rgba(255,255,255,.78); font-size: 1.05rem; }
+.section-heading { margin: 48px 0 20px; }
+.section-heading h2 { margin-bottom: 4px; font-weight: 800; letter-spacing: -.035em; }
+.section-heading p { color: var(--muted); }
+.category-pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0; }
+.category-pills a { padding: 8px 14px; color: var(--green); background: #fff; border: 1px solid var(--line); border-radius: 999px; font-size: .9rem; text-decoration: none; transition: background .18s ease, color .18s ease, transform .18s ease; }
+.category-pills a:hover { color: #fff; background: var(--green); transform: translateY(-1px); }
+.food-card { overflow: hidden; display: flex; flex-direction: column; background: #fff; border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 7px 20px rgba(23,34,28,.05); transition: transform .18s ease, box-shadow .18s ease; }
+.food-card:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(23,34,28,.11); }
+.food-card__image { width: 100%; height: 220px; object-fit: cover; background: var(--sage); }
+.food-card__body { flex: 1; padding: 18px; }
+.food-card__title { margin: 0; color: var(--ink); font-size: 1.1rem; font-weight: 750; line-height: 1.2; }
+.food-card__price { color: var(--green); font-size: 1.06rem; font-weight: 800; white-space: nowrap; }
+.food-card__meta { color: var(--muted); font-size: .8rem; }
+.empty-state { padding: 70px 20px; text-align: center; background: #fff; border: 1px dashed #c8d0c8; border-radius: 18px; }
+.empty-state h2 { font-weight: 800; }
+.empty-state p { color: var(--muted); }
+.app-footer { padding: 28px 0; color: rgba(255,255,255,.7); background: var(--green-dark); }
+.app-footer a { color: #fff; }
+.cart-table img { width: 74px; height: 64px; object-fit: cover; border-radius: 10px; }
+.quantity-controls { display: inline-flex; align-items: center; gap: 7px; }
+.quantity-controls a { display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center; color: var(--green); background: var(--sage); border-radius: 8px; text-decoration: none; }
+.quantity-controls a:hover { color: #fff; background: var(--green); }
+@media (max-width: 576px) {
+  .app-main { padding-top: 24px; }
+  .menu-hero { border-radius: 16px; }
+  .menu-hero__content { padding: 0 24px; }
+  .food-card__image { height: 180px; }
+}

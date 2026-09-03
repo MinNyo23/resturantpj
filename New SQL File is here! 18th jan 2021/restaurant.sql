@@ -149,7 +149,7 @@ CREATE TABLE `orders` (
   `deliveryaddress` varchar(300) NOT NULL,
   `orderdate` date NOT NULL,
   `status` int(11) NOT NULL,
-  `senddate` date NOT NULL
+  `senddate` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
@@ -169,7 +169,7 @@ INSERT INTO `orders` (`orderid`, `customerid`, `deliveryname`, `deliveryphone`, 
 CREATE TABLE `user` (
   `userid` int(11) NOT NULL,
   `username` varchar(30) NOT NULL,
-  `password` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
   `email` varchar(30) NOT NULL,
   `phone` varchar(15) NOT NULL,
   `address` varchar(100) NOT NULL,

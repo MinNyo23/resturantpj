@@ -1,197 +1,50 @@
-<?php 
-include('function.php');
-include('admin/conn.php');
-if(isset($_POST['register']))
-{
-	$username=$_POST['username'];
-	$password=$_POST['password'];
-	$confirmpassword=$_POST['confirmpassword'];
-	$email=$_POST['email'];
-	$phone=$_POST['phone'];
-	$address=$_POST['address'];
-	$error=array(
-      'username'=>'',
-      'password'=>'',
-      'confirmpassword'=>'',
-      'matchpassword'=>'',
-      'email'=>'',
-      'phone'=>'',
-      'address'=>'',
-	);
-	if($username=='')
-	{
-		$error['username']='Username must be enter';		
-	}
-	else
-	{
-		if(strlen($username)<3)
-		{
-			$error['username']='Username need to be longer';
-		}
-	}
-	if($password=='')
-	{
-		$error['password']='Password must be enter';
-	}
-	else
-	{
-		if(strlen($password)<6){
-			$error['password']='Password need to be longer';
-		}
-	}
-	if($confirmpassword=='')
-	{
-		$error['confirmpassword']='Confirmpassword must be enter';
-	}
-	else
-	{
-		if($password!=$confirmpassword){
-			$error['matchpassword']='Password do not match';
-		}
-	}
-	if($email==''){
-		$error['email']='E-mail must be enter';
-	}
-	if($phone==''){
-		$error['phone']='Phone must be enter';
-	}
-	if($address==''){
-		$error['address']='Address must be enter';
-	}
-    foreach ($error as $key => $value) {
-	if(empty($value)){
-		unset($error[$key]);
-	}
-}
-    if(empty($error)){
-	    create_accu();
+<?php
+require_once __DIR__ . '/function.php';
+
+$username = trim((string) ($_POST['username'] ?? ''));
+$email = trim((string) ($_POST['email'] ?? ''));
+$phone = trim((string) ($_POST['phone'] ?? ''));
+$address = trim((string) ($_POST['address'] ?? ''));
+$errors = [];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $password = (string) ($_POST['password'] ?? '');
+    $confirmPassword = (string) ($_POST['confirmpassword'] ?? '');
+    if (mb_strlen($username) < 3) $errors['username'] = 'Use at least 3 characters.';
+    if (mb_strlen($password) < 6) $errors['password'] = 'Use at least 6 characters.';
+    if ($password !== $confirmPassword) $errors['confirmpassword'] = 'Passwords do not match.';
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors['email'] = 'Enter a valid email address.';
+    if ($phone === '') $errors['phone'] = 'Phone number is required.';
+    if ($address === '') $errors['address'] = 'Delivery address is required.';
+
+    if (!$errors) {
+        if (create_accu()) {
+            redirect('login.php');
+        }
+        $errors['username'] = 'That username is already in use.';
     }
-} 
- ?>
- <!DOCTYPE html>
-<html>
+}
+?>
+<!doctype html>
+<html lang="en">
 <head>
-	<title></title>
-  <link rel="stylesheet" type="text/css" href="style.css">
-  <link  rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-    <style>
-  .bg{
-	 background-image: url('./images/regphoto.jpg');
-  background-size: cover;
-  width: 100%;
-  font-family: monospace;
-  color: white;
-  background-position: center;
-  background-attachment: fixed;
-  background: rgba(100, 50%, 0.8);
-  }
-  	
-  div{
-  background-image: url('./photo/regphoto.jpg');
-  background-size: cover;
-  width: 100%;
-  font-family: monospace;
-  color: white;
-  background-position: center;
-  background-attachment: fixed;
-  background: rgba(100, 50%, 0.8);
-}
-label{
-    font-size: 16px;
-    font-weight: normal;
-}
-.form-control{
-  background: transparent;
-  border: 0px;
-  border-radius: 0px;
-  border-bottom: 2px solid white;
-  font-size: 20px;
-  color: white;
-}
-h5{
-  margin-top: 30px;
-}
-#black{
-  margin-top: 10px;
-  background: rgba(0, 0, 1, 0.1);
-  border-radius: 20px;
-}
-
-    </style>
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</head> 
-<body class="bg">
-  <header class="header1">
-    <div class="main">     
-      <ul>
-        <li><a href="home.php">Home</a></li>
-        <li><a href="menu.php">Menu</a> </li>
-        <li><a href="contact.php">Contact</a> </li>
-        <li><a href="../Pages/about.html">About</a> </li>
-        <li><a href="login.php">LOGIN</a> </li>
-      </ul>
-    </div>
-  </header>
-
-<div class="container">
-
-     <div class="row">
-        <div class="col-md-4">
-        </div>
-        <div class="col-md-5" id="black">
-              <div class="text-center">
-                 <h3>Create Your Admin Account<br></h3>
-              </div>
-          <form method="post" action="#">
-              <div class="form-group">
-              <label>User Name</label>
-              <input type="text" name="username" class="form-control" value="<?php if(isset($username)){echo $username;} ?>" placeholder="Enter Your User Name" />
-              <label class="text-danger"><?php echo isset($error['username'])?$error['username']:'' ?></label>
-              </div>
-
-              <div class="form-group">
-              <label>Password</label> 
-              <input type="password" name="password" class="form-control" value="<?php if(isset($password)){echo $password;} ?>" placeholder="Enter Your Password" />
-              <label class="text-danger"><?php echo isset($error['password'])?$error['password']:'' ?></label>
-              </div>
-
-              <div class="form-group">
-              <label>Confirmpassword</label>
-              <input type="password" name="confirmpassword" class="form-control" value="<?php if(isset($password)){echo $password;} ?>" placeholder="Enter Your Confirm Password" />
-              <label class="text-danger"><?php echo isset($error['confirmpassword'])?$error['confirmpassword']:'' ?></label>
-			        <label class="text-danger"><?php echo isset($error['matchpassword'])?$error['matchpassword']:'' ?></label>
-              </div>
-
-              <div class="form-group">
-              <label>E-mail</label>
-              <input type="email" name="email" class="form-control" value="<?php if(isset($phone)){echo $phone;} ?>" placeholder="Enter E-mail" />
-              <label class="text-danger"><?php echo isset($error['email'])?$error['email']:'' ?></label>
-              </div>
-
-              <div class="form-group">
-              <label>Phone</label>
-              <input type="text" name="phone" class="form-control" placeholder="Enter Your Admin Phone" />
-              </div>
-
-              <div class="form-group">
-                  <label>Address</label>
-                  <textarea class="form-control"  name="address" value="<?php if(isset($address)){echo $address;} ?>" placeholder="Enter Address"></textarea>
-                  <label class="text-danger"><?php echo isset($error['address'])?$error['address']:'' ?></label>
-              </div>
-
-              <div style="text-align: center;">
-                  <button type="submit" name="register" class="btn btn-success" style="width: 25%;"> Sign In</button>
-              <div>
-<br>
-                               
-                <input type="reset" name="btnreset" value="Reset" class="btn btn-primary" style="width: 25%;">
-          </form>  <!---form ---->
-      </div> <!---div col-md-6 --->
-    </div> <!---div row--->
-     
-</div>   <!---div container--->
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create account | RollingStone</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="css/app.css">
+  <style>body{background:linear-gradient(135deg,#183b2a,#dfe9df)}.auth-card{max-width:650px;margin:42px auto;background:#fff;border-radius:22px;box-shadow:0 20px 45px rgba(24,59,42,.18)}.auth-card .card-body{padding:38px}.form-control{min-height:48px;border-radius:10px}</style>
+</head>
+<body class="app-body">
+<?php include __DIR__ . '/header.php'; ?>
+<main class="container"><div class="auth-card"><div class="card-body"><div class="eyebrow">Join RollingStone</div><h1 class="h2 font-weight-bold mb-2">Create your account</h1><p class="text-muted mb-4">Save time at checkout and keep your cart ready for your next craving.</p>
+  <form method="post" action="register.php" novalidate>
+    <div class="form-row"><div class="form-group col-md-6"><label for="username">Username</label><input id="username" name="username" type="text" class="form-control" value="<?php echo e($username); ?>" autocomplete="username" required><?php if (isset($errors['username'])): ?><small class="text-danger"><?php echo e($errors['username']); ?></small><?php endif; ?></div><div class="form-group col-md-6"><label for="email">Email</label><input id="email" name="email" type="email" class="form-control" value="<?php echo e($email); ?>" autocomplete="email" required><?php if (isset($errors['email'])): ?><small class="text-danger"><?php echo e($errors['email']); ?></small><?php endif; ?></div></div>
+    <div class="form-row"><div class="form-group col-md-6"><label for="password">Password</label><input id="password" name="password" type="password" class="form-control" autocomplete="new-password" required><?php if (isset($errors['password'])): ?><small class="text-danger"><?php echo e($errors['password']); ?></small><?php endif; ?></div><div class="form-group col-md-6"><label for="confirmpassword">Confirm password</label><input id="confirmpassword" name="confirmpassword" type="password" class="form-control" autocomplete="new-password" required><?php if (isset($errors['confirmpassword'])): ?><small class="text-danger"><?php echo e($errors['confirmpassword']); ?></small><?php endif; ?></div></div>
+    <div class="form-row"><div class="form-group col-md-6"><label for="phone">Phone</label><input id="phone" name="phone" type="tel" class="form-control" value="<?php echo e($phone); ?>" autocomplete="tel" required><?php if (isset($errors['phone'])): ?><small class="text-danger"><?php echo e($errors['phone']); ?></small><?php endif; ?></div><div class="form-group col-md-6"><label for="address">Delivery address</label><input id="address" name="address" type="text" class="form-control" value="<?php echo e($address); ?>" autocomplete="street-address" required><?php if (isset($errors['address'])): ?><small class="text-danger"><?php echo e($errors['address']); ?></small><?php endif; ?></div></div>
+    <button type="submit" name="register" class="btn btn-primary btn-block py-2 mt-2">Create account</button>
+  </form>
+  <p class="text-center text-muted mt-4 mb-0">Already have an account? <a href="login.php">Sign in</a></p>
+</div></div></main>
 </body>
 </html>

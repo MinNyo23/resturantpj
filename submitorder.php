@@ -1,99 +1,40 @@
-<?php 
-session_start();
-include('admin/conn.php');
-include('function.php');
-if(!empty($_SESSION['user']))
-{
-	$username=$_SESSION['user'];
-	$query="select * from user where username='$username'";
-	$go_query=mysqli_query($connection,$query);
-	while ($out=mysqli_fetch_array($go_query))
-	{
-		$userid=$out['userid'];
-		$username=$out['username'];
-		$email=$out['email'];
-		$phone=$out['phone'];
-		$address=$out['address'];
-	}
-}
- ?>
+<?php
+require_once __DIR__ . '/includes/app.php';
+require_customer();
 
-<!DOCTYPE html>
-<html>
+if (empty($_SESSION['cart'])) {
+    flash('error', 'Your cart is empty. Add at least one dish before checkout.');
+    redirect('index.php');
+}
+
+$userid = (int) $_SESSION['user_id'];
+$stmt = mysqli_prepare($connection, 'SELECT username, email, phone, address FROM user WHERE userid = ? LIMIT 1');
+mysqli_stmt_bind_param($stmt, 'i', $userid);
+mysqli_stmt_execute($stmt);
+$profile = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+mysqli_stmt_close($stmt);
+if (!$profile) {
+    unset($_SESSION['user'], $_SESSION['user_id']);
+    flash('error', 'Your account could not be found. Please sign in again.');
+    redirect('login.php');
+}
+
+$phone = trim((string) ($_POST['phone'] ?? $profile['phone']));
+$address = trim((string) ($_POST['address'] ?? $profile['address']));
+?>
+<!doctype html>
+<html lang="en">
 <head>
-	<style type="text/css">
-		.bg{
-			background-image: url();
-			background-size: cover;
-		}
-		.container {
-  border-radius: 5px;
-  background-color: #f2f2f2;
-  padding: 20px;
-}
-.container .row{
-	width: 100%;
-}
-	</style>
-	<title></title>
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="    sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-	<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="path/to/font-awesome/css/fontawesome.css">
-    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Checkout | RollingStone</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="css/app.css">
 </head>
-<body class="bg" style="background-color: ;background-image: url(./images/blur9.png);background-size: cover;">
-<?php 
-include('header.php');
- ?>
- <br>
- <div class="container" style="width: 650px;background-image: url('./images/food1.jpg');background-size: 650px 650px;height: 650px;">
-	<div class="row">
-		
-	</div>
-	<div class="row">
-		<div class="col-md-6 offset-3">
-			<form action="submit.php" method="post">
-				<div class="form-group">
-					<h5 style="color: yellow;">Username</h5>
-					<input type="text" name="username" value="<?php if(isset($username)){ echo $username; }?>" class="form-control">
-					<input type="hidden" name="userid" value="<?php if(isset($userid)){ echo $userid; }?>">
-
-				</div>
-				<div class="form-group">
-					<h5 style="color: yellow;">Email</h5>
-					<input type="text" name="email" value="<?php if(isset($email)){ echo $email; }?>" class="form-control">
-				</div>
-				<div class="form-group">
-					<h5 style="color: yellow;">Phone</h5>
-					<input type="text" name="phone" value="<?php if(isset($phone)){ echo $phone; }?>" class="form-control">
-				</div>
-				<div class="form-group">
-					<h5 style="color: yellow;">Address</h5>
-					<textarea name="address" class="form-control" rows="3" cols="20"><?php if(isset($address)){ echo $address; }?></textarea> 
-				</div>
-				<div class="form-group">
-					<h5 style="color: yellow;">Payment Type</h5>
-					<select name="paymenttype" class="form-control">
-						<option value="mastercard">Mastercard</option>
-						<option value="visacard">Visa</option>
-						<option value="mpu">MPU</option>
-					</select>
-				</div>
-				<div class="form-group">
-					<h4 style="color: yellow;">Card Number</h4>
-					<input type="text" name="cardno" class="form-control">
-				</div>
-				<div class="form-group" style="text-align: center;">
-					
-					<input type="submit" name="submit" value="Order Now" class="btn btn-success">
-				</div>
-			</form>
-		</div>
-	</div>
-</div>
-<br>
+<body class="app-body">
+<?php include __DIR__ . '/header.php'; ?>
+<main class="app-main"><div class="container"><div class="row justify-content-center"><div class="col-lg-7"><div class="section-heading mt-0"><div class="eyebrow">Secure checkout</div><h1>Where should we deliver?</h1><p>We will use your account details to prepare this order. You can update the delivery details below.</p></div><div class="card border-0 shadow-sm"><div class="card-body p-4 p-md-5"><div class="alert alert-light border"><i class="fas fa-user-check text-success mr-2"></i>Ordering as <strong><?php echo e($profile['username']); ?></strong></div><form method="post" action="submit.php" novalidate><div class="form-group"><label for="phone">Delivery phone</label><input id="phone" name="phone" type="tel" class="form-control" value="<?php echo e($phone); ?>" autocomplete="tel" required></div><div class="form-group"><label for="address">Delivery address</label><textarea id="address" name="address" class="form-control" rows="4" autocomplete="street-address" required><?php echo e($address); ?></textarea></div><div class="form-group"><label for="paymenttype">Payment method</label><select id="paymenttype" name="paymenttype" class="form-control"><option value="cash_on_delivery">Cash on delivery</option></select><small class="form-text text-muted">Online payment is not connected yet; no card details are collected.</small></div><button class="btn btn-primary btn-block py-2 mt-4" type="submit">Place order <i class="fas fa-check ml-1"></i></button><a href="cart.php" class="btn btn-link btn-block">Back to cart</a></form></div></div></div></div></div></main>
+<footer class="app-footer"><div class="container"><span>RollingStone Restaurant</span></div></footer>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script><script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

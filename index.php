@@ -1,100 +1,98 @@
-<?php 
-Session_start();
-include('function.php');
-include('admin/conn.php');
-$get_query="select * from food";
-$perpage=9;
-$go_query=mysqli_query($connection,$get_query);
-$num=mysqli_num_rows($go_query);
-$num=ceil($num/$perpage);
-$page='';
- ?>
-<!DOCTYPE html>
-<html>
+<?php
+require_once __DIR__ . '/includes/app.php';
+
+$page = max(1, (int) ($_GET['page'] ?? 1));
+$perPage = 9;
+$categoryId = max(0, (int) ($_GET['cat'] ?? 0));
+$searchTerm = trim((string) ($_GET['search'] ?? ''));
+
+$categories = mysqli_query($connection, 'SELECT catid, catname FROM category ORDER BY catname ASC');
+$countSql = 'SELECT COUNT(*) AS total FROM food WHERE 1=1';
+$countTypes = '';
+$countParams = [];
+if ($categoryId > 0) { $countSql .= ' AND categoryid = ?'; $countTypes .= 'i'; $countParams[] = $categoryId; }
+if ($searchTerm !== '') { $countSql .= ' AND foodname LIKE ?'; $countTypes .= 's'; $countParams[] = '%' . $searchTerm . '%'; }
+$countStmt = mysqli_prepare($connection, $countSql);
+bind_params($countStmt, $countTypes, $countParams);
+mysqli_stmt_execute($countStmt);
+$totalRows = (int) (mysqli_fetch_assoc(mysqli_stmt_get_result($countStmt))['total'] ?? 0);
+mysqli_stmt_close($countStmt);
+$totalPages = max(1, (int) ceil($totalRows / $perPage));
+$page = min($page, $totalPages);
+$offset = ($page - 1) * $perPage;
+
+$sql = 'SELECT foodid, foodname, categoryid, price, qty, photo FROM food WHERE 1=1';
+$types = '';
+$params = [];
+if ($categoryId > 0) { $sql .= ' AND categoryid = ?'; $types .= 'i'; $params[] = $categoryId; }
+if ($searchTerm !== '') { $sql .= ' AND foodname LIKE ?'; $types .= 's'; $params[] = '%' . $searchTerm . '%'; }
+$sql .= ' ORDER BY foodname ASC LIMIT ?, ?';
+$types .= 'ii';
+$params[] = $offset;
+$params[] = $perPage;
+$stmt = mysqli_prepare($connection, $sql);
+bind_params($stmt, $types, $params);
+mysqli_stmt_execute($stmt);
+$foods = mysqli_stmt_get_result($stmt);
+
+$querySuffix = '';
+if ($categoryId > 0) { $querySuffix .= '&cat=' . $categoryId; }
+if ($searchTerm !== '') { $querySuffix .= '&search=' . urlencode($searchTerm); }
+?>
+<!doctype html>
+<html lang="en">
 <head>
-  <title></title>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="    sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="path/to/font-awesome/css/fontawesome.css">
-    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Order fresh food | RollingStone</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="css/app.css">
 </head>
-<body style="background-image: url(./images/blur9.png);background-size: cover;">
-
-  <?php
-     include('header.php');
-     ?>
-
-
-<div class="container">
-  <div class="row">
-    <div class="col-sm-12">
-      
-      <div class="container">
-        <div class="row" style="text-align: left;">
-          <?php
-          include('sitebar.php');
-           ?>
-        </div>
-        <br>
+<body class="app-body">
+<?php include __DIR__ . '/header.php'; ?>
+<main class="app-main">
+  <div class="container">
+    <section class="menu-hero">
+      <div class="menu-hero__content">
+        <div class="eyebrow">Good food, made easy</div>
+        <h1 class="mt-2 mb-3">Your next favourite meal is here.</h1>
+        <p class="mb-4">Browse our kitchen’s most-loved dishes, add your picks to the cart, and place an order in just a few steps.</p>
+        <a class="btn btn-warning font-weight-bold" href="#menu">Explore the menu <i class="fas fa-arrow-down ml-1"></i></a>
       </div>
-       
-      <div class="row">
-       
-        <div class="col-sm-12-offset-1 row">
-          <?php
-          if(isset($_GET['page'])){
-            $page = $_GET['page'];
-            $showproduct = ($page * $perpage)-$perpage;
-          }
-          if(!isset($_GET['page'])){
-            $showproduct = 0;
-          }
-          $query = "select * from food limit $showproduct,$perpage";
-          $go_query = mysqli_query($connection,$query);
-          $countresult = mysqli_num_rows($go_query);
-          if($countresult==0){
-            echo "<div class=\"card card-header\">Sorry, no result found<a href=\"index.php\">Back</a></div>";
-          }
-          elseif($countresult>0){
-            while($row = mysqli_fetch_array($go_query)){
-              $foodid = $row['foodid'];
-              $foodname = $row['foodname'];
-              $categoryid = $row['categoryid'];  
-              $price = $row['price'];
-              $qty = $row['qty'];
-              $photo = $row['photo'];
-              $display = '<div class="col-sm-3"><div class="card-deck mb-3 text-center "><div class="card bg-dark shadow-sm"><div class="thumbnail">';
-              $display.= "<img src='./images/{$photo}' width='180' height='155' style='padding-top:8px;'>";
-              $display.= "<div class='caption'>";
-              $display.= "<h4 style='color:white;'>{$foodname}</h4>";
-              $display.= "<p style='color:white;'>Price = {$price}$</p>";
-              $display.= '<p class="text-center"><a href="addtocart.php?id='.$foodid.'" class="btn btn-primary">
-              <i class="fas fa-shopping-cart"> Add to Cart </i></a></p>';
-              $display.= "</div></div></div></div></div>";
-              echo $display;
-          }
-        }
-           ?>
-        </div>
-      </div>
+    </section>
+
+    <div id="menu" class="section-heading d-flex flex-column flex-md-row align-items-md-end justify-content-between">
+      <div><div class="eyebrow">Our selection</div><h2>Order from the menu</h2><p class="mb-0"><?php echo $totalRows; ?> dishes available today</p></div>
+      <?php if ($searchTerm !== ''): ?><a class="btn btn-sm btn-outline-secondary mt-3 mt-md-0" href="index.php">Clear search</a><?php endif; ?>
     </div>
+
+    <nav class="category-pills" aria-label="Filter by category">
+      <a href="index.php">All dishes</a>
+      <?php while ($category = mysqli_fetch_assoc($categories)): ?>
+        <a href="index.php?cat=<?php echo (int) $category['catid']; ?><?php echo $searchTerm !== '' ? '&search=' . urlencode($searchTerm) : ''; ?>"><?php echo e($category['catname']); ?></a>
+      <?php endwhile; ?>
+    </nav>
+
+    <?php if ($totalRows === 0): ?>
+      <div class="empty-state"><h2>No dishes found</h2><p>Try removing the filter or searching for another dish.</p><a class="btn btn-primary" href="index.php">Show all dishes</a></div>
+    <?php else: ?>
+      <div class="row">
+        <?php while ($food = mysqli_fetch_assoc($foods)): ?>
+          <div class="col-sm-6 col-lg-4 mb-4"><?php echo render_food_card($food); ?></div>
+        <?php endwhile; ?>
+      </div>
+      <?php if ($totalPages > 1): ?>
+        <nav aria-label="Menu pages"><ul class="pagination justify-content-center mt-3">
+          <?php for ($i = 1; $i <= $totalPages; $i++): ?><li class="page-item <?php echo $i === $page ? 'active' : ''; ?>"><a class="page-link" href="index.php?page=<?php echo $i . $querySuffix; ?>"><?php echo $i; ?></a></li><?php endfor; ?>
+        </ul></nav>
+      <?php endif; ?>
+    <?php endif; ?>
   </div>
-</div>
-
-<ul class="pagination justify-content-center" style="margin:20px 0;">
-  <?php
-  for($i=1;$i<=$num;$i++){
-    if($i==$page){
-  echo "<li class=\"page-item\"><a href=\"index.php?page={$i}\" class=\"page-link\">{$i}</a></li>";
-  }
-  else{
-    echo "<li class=\"page-item\"><a href=\"index.php?page={$i}\" class=\"page-link\">{$i}</a></li>";
-  }
-}
-  ?>
-</ul>
-
-  </body>
+</main>
+<footer class="app-footer"><div class="container d-flex flex-column flex-md-row justify-content-between"><span>RollingStone Restaurant</span><span><a href="contact.php">Need help?</a> We are happy to hear from you.</span></div></footer>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
 </html>
+<?php mysqli_stmt_close($stmt); ?>

@@ -1,118 +1,54 @@
-<?php 
-session_start();
-include('function.php');
-include('admin/conn.php');
- ?>
-<!DOCTYPE html>
-<html>
-<head>
-	<title></title>
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="    sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-	<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="path/to/font-awesome/css/fontawesome.css">
-    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
-</head>
-<body style="background-color: ;background-image: url(./images/blur9.png);background-size: cover;">
-
 <?php
-	include('header.php');
+require_once __DIR__ . '/includes/app.php';
+
+$cartItems = [];
+$total = 0.0;
+foreach ($_SESSION['cart'] ?? [] as $id => $quantity) {
+    $foodId = (int) $id;
+    $quantity = max(0, (int) $quantity);
+    $food = $foodId > 0 ? get_food($foodId) : null;
+    if (!$food || $quantity < 1 || (int) $food['qty'] < 1) {
+        unset($_SESSION['cart'][$id]);
+        continue;
+    }
+    $quantity = min($quantity, (int) $food['qty']);
+    $_SESSION['cart'][$id] = $quantity;
+    $lineTotal = (float) $food['price'] * $quantity;
+    $total += $lineTotal;
+    $cartItems[] = ['food' => $food, 'quantity' => $quantity, 'lineTotal' => $lineTotal];
+}
 ?>
-
-<div class="container">
-	<br>
-	<div class="row">
-		
-		<div class="col-sm-12" style="text-align: center;">
-	         <div class="card card-header bg-info">
-	         <marquee>	
-		  <h2 style="color: black;"><i class='far fa-hand-peace'></i> Welcome!
-			<span style="color: white;">
-		     <?php
-			if (!empty($_SESSION['user']))
-			 {
-			    echo $_SESSION['user'];
-			 }
-			else
-			 {
-			    $_SESSION['user']='';
-			   echo "No";
-			 }
-		     ?>
-			</span>
-			<i class='far fa-hand-peace'></i>
-			</h2>
-		</marquee>
-			</div>
-		</div>
-	</div>
-	<div class="row">
-		<div class="col-sm-12">
-		<div class="panel panel-success">
-			<div class="panel-heading text-center">
-				<h2 style="color: skyblue;">
-					Please select Shopping Cart.
-				</h2>
-			</div>  <br>
-			<?php
-				if (!empty($_SESSION['cart'])):
-			?>
-			<div class="panel-body" style="border: 3px solid black;background-color: black;">
-				<table class="table table-condensed">
-					<tr style="color: white;background-color: black;color: yellow;">
-						<th>Photo 		</th>
-						<th>Name 		</th>
-						<th>Quantity	</th>
-						<th>Unit Price	</th>
-						<th>Price		</th>
-						<th>Action		</th>
-					</tr>
-					<?php
-						$total=0;
-						foreach($_SESSION['cart'] as $id=>$qty):
-						$result=mysqli_query($connection,"select * from food where foodid=$id");
-						$row=mysqli_fetch_assoc($result);
-						$total+=$row['price'] * $qty;
-					?>
-					<tr style="color: white;background-color: black;">
-
-						<td><img src="images/<?php echo $row['photo'] ?>" width="200" height="250" class="img img-thumbnail"></td>
-						<td><h5><?php echo $row['foodname'] ?></h5></td>
-						<td><h5><?php echo $qty ?>
-							<span>
-								<a href="increase_qty.php?id=<?php echo $id ?>" class="fas fa-sort-up"></a>
-								<a href="decrease_qty.php?id=<?php echo $id ?>" class="fas fa-sort-down"></a>
-							</span></h5>
-						</td>
-						<td><h5><?php echo $row['price'] ?></h5></td>
-						<td><h5><?php echo $row['price']*$qty ?></h5></td>
-						<td>
-							<span style="margin: 5px"></span>
-							<a href="remove.php?id=<?php echo $id ?>" class="fas fa-trash-alt"></a>
-						</td>
-					</tr>
-					<?php endforeach; ?>
-					<tr style="color: white;background-color: black;">
-						<td colspan="5" align="right"><b>Total:</b></td>
-						<td>$<?php echo $total; ?></td>
-					</tr>
-				</table>
-			</div>
-			<br>
-			<div class="panel-footer" style="text-align: right;">
-				<a href="clear.php" class="btn btn-danger">Clear Cart</a>&nbsp;
-				<a href="index.php" class="btn btn-default">Back</a>&nbsp;
-				<a href="submitorder.php" class="btn btn-primary">Submit Order</a>&nbsp;
-			</div>
-			<?php else: ?>
-				<h3 class="text-danger text-center">You select no Product now!</h3>
-				<p class="text-center"><a href="index.php" class="btn btn-success">Shop Now!</a></p>
-			<?php endif; ?>
-		</div>
-	 </div>
-	</div>
-</div>
-<br>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Your cart | RollingStone</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body class="app-body">
+<?php include __DIR__ . '/header.php'; ?>
+<main class="app-main"><div class="container">
+  <div class="section-heading"><div class="eyebrow">Almost there</div><h1>Your order</h1><p>Review your items and adjust quantities before checkout.</p></div>
+  <?php if (empty($cartItems)): ?>
+    <div class="empty-state"><div class="mb-3"><i class="fas fa-shopping-bag fa-2x text-muted"></i></div><h2>Your cart is empty</h2><p>Choose something from the menu and it will appear here.</p><a href="index.php" class="btn btn-primary">Browse the menu</a></div>
+  <?php else: ?>
+    <div class="row align-items-start">
+      <div class="col-lg-8 mb-4">
+        <div class="card border-0 shadow-sm"><div class="card-body p-0"><div class="table-responsive"><table class="table cart-table mb-0"><thead><tr><th scope="col">Item</th><th scope="col">Price</th><th scope="col">Quantity</th><th scope="col" class="text-right">Total</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead><tbody>
+        <?php foreach ($cartItems as $item): $food = $item['food']; $id = (int) $food['foodid']; ?>
+          <tr><td><div class="d-flex align-items-center"><img src="images/<?php echo e($food['photo']); ?>" alt="<?php echo e($food['foodname']); ?>"><span class="ml-3 font-weight-bold"><?php echo e($food['foodname']); ?></span></div></td><td>$<?php echo number_format((float) $food['price'], 2); ?></td><td><div class="quantity-controls"><a href="decrease_qty.php?id=<?php echo $id; ?>" aria-label="Decrease <?php echo e($food['foodname']); ?> quantity"><i class="fas fa-minus"></i></a><strong><?php echo $item['quantity']; ?></strong><a href="increase_qty.php?id=<?php echo $id; ?>" aria-label="Increase <?php echo e($food['foodname']); ?> quantity"><i class="fas fa-plus"></i></a></div></td><td class="text-right font-weight-bold">$<?php echo number_format($item['lineTotal'], 2); ?></td><td class="text-right"><a class="text-danger" href="remove.php?id=<?php echo $id; ?>" aria-label="Remove <?php echo e($food['foodname']); ?>"><i class="fas fa-trash-alt"></i></a></td></tr>
+        <?php endforeach; ?>
+        </tbody></table></div></div></div>
+      </div>
+      <div class="col-lg-4"><div class="card border-0 shadow-sm"><div class="card-body"><h2 class="h5 font-weight-bold">Order total</h2><div class="d-flex justify-content-between py-3 border-bottom"><span>Subtotal</span><strong>$<?php echo number_format($total, 2); ?></strong></div><p class="small text-muted mt-3">Delivery and final payment details are confirmed at checkout.</p><a href="submitorder.php" class="btn btn-primary btn-block">Continue to checkout <i class="fas fa-arrow-right ml-1"></i></a><a href="clear.php" class="btn btn-link btn-block text-danger">Clear cart</a></div></div></div>
+    </div>
+  <?php endif; ?>
+</div></main>
+<footer class="app-footer"><div class="container"><span>RollingStone Restaurant</span></div></footer>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
